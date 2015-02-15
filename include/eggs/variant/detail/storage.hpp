@@ -39,14 +39,9 @@ namespace eggs { namespace variants { namespace detail
     template <typename T, typename ...Ts>
     struct _basic_union<pack<T, Ts...>, true>
     {
-        EGGS_CXX11_CONSTEXPR _basic_union(
-            std::integral_constant<std::size_t, 0>) EGGS_CXX11_NOEXCEPT
-          : _empty{}
-        {}
-
         template <typename ...Args>
         EGGS_CXX11_CONSTEXPR _basic_union(
-            std::integral_constant<std::size_t, 1>, Args&&... args)
+            std::integral_constant<std::size_t, 0>, Args&&... args)
           : _head(std::forward<Args>(args)...)
         {}
 
@@ -59,18 +54,50 @@ namespace eggs { namespace variants { namespace detail
 
         EGGS_CXX14_CONSTEXPR void* target() EGGS_CXX11_NOEXCEPT
         {
-            return &_empty;
+            return &_target;
         }
 
         EGGS_CXX11_CONSTEXPR void const* target() const EGGS_CXX11_NOEXCEPT
         {
-            return &_empty;
+            return &_target;
+        }
+
+        EGGS_CXX14_CONSTEXPR T& get(
+            std::integral_constant<std::size_t, 0>) EGGS_CXX11_NOEXCEPT
+        {
+            return _head;
+        }
+
+        EGGS_CXX11_CONSTEXPR T const& get(
+            std::integral_constant<std::size_t, 0>) const EGGS_CXX11_NOEXCEPT
+        {
+            return _head;
+        }
+
+        template <
+            std::size_t I
+          , typename U = typename at_index<I, pack<T, Ts...>>::type
+        >
+        EGGS_CXX14_CONSTEXPR U& get(
+            std::integral_constant<std::size_t, I>) EGGS_CXX11_NOEXCEPT
+        {
+            return _tail.get(std::integral_constant<std::size_t, I - 1>{});
+        }
+
+        template <
+            std::size_t I
+          , typename U = typename at_index<I, pack<T, Ts...>>::type
+        >
+        EGGS_CXX11_CONSTEXPR U const& get(
+            std::integral_constant<std::size_t, I>) const EGGS_CXX11_NOEXCEPT
+        {
+            return _tail.get(std::integral_constant<std::size_t, I - 1>{});
         }
 
     private:
         union
         {
-            char _empty;
+            char _target;
             T _head;
             _basic_union<pack<Ts...>, true> _tail;
         };
@@ -79,14 +106,9 @@ namespace eggs { namespace variants { namespace detail
     template <typename T, typename ...Ts>
     struct _basic_union<pack<T, Ts...>, false>
     {
-        EGGS_CXX11_CONSTEXPR _basic_union(
-            std::integral_constant<std::size_t, 0>) EGGS_CXX11_NOEXCEPT
-          : _empty{}
-        {}
-
         template <typename ...Args>
         EGGS_CXX11_CONSTEXPR _basic_union(
-            std::integral_constant<std::size_t, 1>, Args&&... args)
+            std::integral_constant<std::size_t, 0>, Args&&... args)
           : _head(std::forward<Args>(args)...)
         {}
 
@@ -101,29 +123,61 @@ namespace eggs { namespace variants { namespace detail
 
         EGGS_CXX14_CONSTEXPR void* target() EGGS_CXX11_NOEXCEPT
         {
-            return &_empty;
+            return &_target;
         }
 
         EGGS_CXX11_CONSTEXPR void const* target() const EGGS_CXX11_NOEXCEPT
         {
-            return &_empty;
+            return &_target;
+        }
+
+        EGGS_CXX14_CONSTEXPR T& get(
+            std::integral_constant<std::size_t, 0>) EGGS_CXX11_NOEXCEPT
+        {
+            return _head;
+        }
+
+        EGGS_CXX11_CONSTEXPR T const& get(
+            std::integral_constant<std::size_t, 0>) const EGGS_CXX11_NOEXCEPT
+        {
+            return _head;
+        }
+
+        template <
+            std::size_t I
+          , typename U = typename at_index<I, pack<T, Ts...>>::type
+        >
+        EGGS_CXX14_CONSTEXPR U& get(
+            std::integral_constant<std::size_t, I>) EGGS_CXX11_NOEXCEPT
+        {
+            return _tail.get(std::integral_constant<std::size_t, I - 1>{});
+        }
+
+        template <
+            std::size_t I
+          , typename U = typename at_index<I, pack<T, Ts...>>::type
+        >
+        EGGS_CXX11_CONSTEXPR U const& get(
+            std::integral_constant<std::size_t, I>) const EGGS_CXX11_NOEXCEPT
+        {
+            return _tail.get(std::integral_constant<std::size_t, I - 1>{});
         }
 
     private:
         union
         {
-            char _empty;
+            char _target;
             T _head;
             _basic_union<pack<Ts...>, false> _tail;
         };
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    template <typename Ts, bool IsTriviallyDestructible>
-    struct _union
-      : _basic_union<Ts, IsTriviallyDestructible>
+    template <typename ...Ts, bool IsTriviallyDestructible>
+    struct _union<pack<Ts...>, IsTriviallyDestructible>
+      : _basic_union<pack<Ts...>, IsTriviallyDestructible>
     {
-        using base_type = _basic_union<Ts, IsTriviallyDestructible>;
+        using base_type = _basic_union<pack<Ts...>, IsTriviallyDestructible>;
 
         EGGS_CXX11_CONSTEXPR _union() EGGS_CXX11_NOEXCEPT
           : base_type{std::integral_constant<std::size_t, 0>{}}
@@ -134,6 +188,24 @@ namespace eggs { namespace variants { namespace detail
             std::integral_constant<std::size_t, I> which, Args&&... args)
           : base_type(which, std::forward<Args>(args)...)
         {}
+
+        template <
+            std::size_t I
+          , typename T = typename at_index<I, pack<Ts...>>::type
+        >
+        EGGS_CXX14_CONSTEXPR T& get() EGGS_CXX11_NOEXCEPT
+        {
+            return base_type::get(std::integral_constant<std::size_t, I>{});
+        }
+
+        template <
+            std::size_t I
+          , typename T = typename at_index<I, pack<Ts...>>::type
+        >
+        EGGS_CXX11_CONSTEXPR T const& get() const EGGS_CXX11_NOEXCEPT
+        {
+            return base_type::get(std::integral_constant<std::size_t, I>{});
+        }
 
         using base_type::target;
     };
@@ -257,12 +329,13 @@ namespace eggs { namespace variants { namespace detail
         _union() EGGS_CXX11_NOEXCEPT
         {}
 
-        template <std::size_t I, typename ...Args>
+        template <
+            std::size_t I, typename ...Args
+          , typename T = typename at_index<I, pack<Ts...>>::type
+        >
         _union(std::integral_constant<std::size_t, I> which, Args&&... args)
         {
-            ::new (target()) typename at_index<
-                I, pack<empty, Ts...>
-            >::type(std::forward<Args>(args)...);
+            ::new (target()) T(std::forward<Args>(args)...);
         }
 
         void* target() EGGS_CXX11_NOEXCEPT
@@ -273,6 +346,24 @@ namespace eggs { namespace variants { namespace detail
         void const* target() const EGGS_CXX11_NOEXCEPT
         {
             return &_buffer;
+        }
+
+        template <
+            std::size_t I
+          , typename T = typename at_index<I, pack<Ts...>>::type
+        >
+        T& get() EGGS_CXX11_NOEXCEPT
+        {
+            return *static_cast<T*>(target());
+        }
+
+        template <
+            std::size_t I
+          , typename T = typename at_index<I, pack<Ts...>>::type
+        >
+        T const& get() const EGGS_CXX11_NOEXCEPT
+        {
+            return *static_cast<T const*>(target());
         }
 
         typename aligned_union<0, Ts...>::type _buffer;
@@ -600,7 +691,7 @@ namespace eggs { namespace variants { namespace detail
     using storage = _storage<
         pack<Ts...>
       , _union<
-            pack<Ts...>
+            pack<detail::empty, Ts...>
 #  if EGGS_CXX11_STD_HAS_IS_TRIVIALLY_DESTRUCTIBLE
           , all_of<pack<std::is_trivially_destructible<Ts>...>>::value
 #  else
