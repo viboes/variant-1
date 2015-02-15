@@ -35,6 +35,7 @@ TEST_CASE("variant<Ts...>::variant(T&&)", "[variant.cnstr]")
         static constexpr eggs::variant<int, Constexpr> v(Constexpr(42));
         constexpr std::size_t vw = v.which();
         constexpr void const* vt = v.target();
+        constexpr std::type_info const& vtt = v.target_type();
     }
 #endif
 }
@@ -64,6 +65,7 @@ TEST_CASE("variant<Ts...>::variant(nullvariant_t)", "[variant.cnstr]")
         static constexpr eggs::variant<int, Constexpr> v(nullvariant);
         constexpr std::size_t vw = v.which();
         constexpr void const* vt = v.target();
+        constexpr std::type_info const& vtt = v.target_type();
     }
 #endif
 }
@@ -83,6 +85,7 @@ TEST_CASE("variant<>::variant(nullvariant_t)", "[variant.cnstr]")
         static constexpr eggs::variant<int, Constexpr> v(nullvariant);
         constexpr std::size_t vw = v.which();
         constexpr void const* vt = v.target();
+        constexpr std::type_info const& vtt = v.target_type();
     }
 #endif
 }
