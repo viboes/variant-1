@@ -12,6 +12,7 @@
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+#include "constexpr.hpp"
 
 EGGS_CXX11_STATIC_CONSTEXPR std::size_t npos = eggs::variant<>::npos;
 
@@ -23,6 +24,15 @@ TEST_CASE("variant<Ts...>::variant()", "[variant.cnstr]")
     CHECK(v.which() == npos);
     CHECK(v.target() == nullptr);
     CHECK(v.target_type() == typeid(void));
+
+#if EGGS_CXX11_HAS_CONSTEXPR
+    SECTION("constexpr")
+    {
+        static constexpr eggs::variant<Constexpr> v;
+        constexpr std::size_t vw = v.which();
+        constexpr void const* vt = v.target();
+    }
+#endif
 }
 
 TEST_CASE("variant<>::variant()", "[variant.cnstr]")
@@ -33,4 +43,13 @@ TEST_CASE("variant<>::variant()", "[variant.cnstr]")
     CHECK(v.which() == npos);
     CHECK(v.target() == nullptr);
     CHECK(v.target_type() == typeid(void));
+
+#if EGGS_CXX11_HAS_CONSTEXPR
+    SECTION("constexpr")
+    {
+        static constexpr eggs::variant<> v;
+        constexpr std::size_t vw = v.which();
+        constexpr void const* vt = v.target();
+    }
+#endif
 }
