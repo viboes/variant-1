@@ -92,6 +92,23 @@ namespace eggs { namespace variants { namespace detail
     using index_pack = typename _index_pack<Ts>::type;
 
     ///////////////////////////////////////////////////////////////////////////
+    template <typename Is>
+    struct _make_typed_index_pack;
+
+    template <std::size_t ...Is>
+    struct _make_typed_index_pack<pack_c<std::size_t, Is...>>
+      : pack<std::integral_constant<std::size_t, Is>...>
+    {};
+
+    template <typename Ts>
+    struct _typed_index_pack
+      : _make_typed_index_pack<index_pack<Ts>>
+    {};
+
+    template <typename Ts>
+    using typed_index_pack = typename _typed_index_pack<Ts>::type;
+
+    ///////////////////////////////////////////////////////////////////////////
     template <typename Vs>
     struct all_of;
 

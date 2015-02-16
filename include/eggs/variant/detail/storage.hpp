@@ -457,9 +457,9 @@ namespace eggs { namespace variants { namespace detail
 #endif
           : base_type{}
         {
-            detail::copy_construct{}(
-                pack<empty, Ts...>{}, rhs._which
-              , target(), rhs.target()
+            detail::copy_construct<Union>{}(
+                typed_index_pack<pack<empty, Ts...>>{}, rhs._which
+              , _buffer, rhs._buffer
             );
             _which = rhs._which;
         }
@@ -472,9 +472,9 @@ namespace eggs { namespace variants { namespace detail
 #endif
           : base_type{}
         {
-            detail::move_construct{}(
-                pack<empty, Ts...>{}, rhs._which
-              , target(), rhs.target()
+            detail::move_construct<Union>{}(
+                typed_index_pack<pack<empty, Ts...>>{}, rhs._which
+              , _buffer, rhs._buffer
             );
             _which = rhs._which;
         }
@@ -503,16 +503,16 @@ namespace eggs { namespace variants { namespace detail
         {
             if (_which == rhs._which)
             {
-                detail::copy_assign{}(
-                    pack<empty, Ts...>{}, _which
-                  , target(), rhs.target()
+                detail::copy_assign<Union>{}(
+                    typed_index_pack<pack<empty, Ts...>>{}, _which
+                  , _buffer, rhs._buffer
                 );
             } else {
                 _which = 0;
 
-                detail::copy_construct{}(
-                    pack<empty, Ts...>{}, rhs._which
-                  , target(), rhs.target()
+                detail::copy_construct<Union>{}(
+                    typed_index_pack<pack<empty, Ts...>>{}, rhs._which
+                  , _buffer, rhs._buffer
                 );
                 _which = rhs._which;
             }
@@ -529,16 +529,16 @@ namespace eggs { namespace variants { namespace detail
         {
             if (_which == rhs._which)
             {
-                detail::move_assign{}(
-                    pack<empty, Ts...>{}, _which
-                  , target(), rhs.target()
+                detail::move_assign<Union>{}(
+                    typed_index_pack<pack<empty, Ts...>>{}, _which
+                  , _buffer, rhs._buffer
                 );
             } else {
                 _which = 0;
 
-                detail::move_construct{}(
-                    pack<empty, Ts...>{}, rhs._which
-                  , target(), rhs.target()
+                detail::move_construct<Union>{}(
+                    typed_index_pack<pack<empty, Ts...>>{}, rhs._which
+                  , _buffer, rhs._buffer
                 );
                 _which = rhs._which;
             }
@@ -549,9 +549,9 @@ namespace eggs { namespace variants { namespace detail
         {
             if (_which == rhs._which)
             {
-                detail::swap{}(
-                    pack<empty, Ts...>{}, _which
-                  , target(), rhs.target()
+                detail::swap<Union>{}(
+                    typed_index_pack<pack<empty, Ts...>>{}, _which
+                  , _buffer, rhs._buffer
                 );
             } else if (_which == 0) {
                 *this = std::move(rhs);
@@ -676,9 +676,9 @@ namespace eggs { namespace variants { namespace detail
     protected:
         void _destroy()
         {
-            detail::destroy{}(
-                pack<empty, Ts...>{}, _which
-              , target()
+            detail::destroy<Union>{}(
+                typed_index_pack<pack<empty, Ts...>>{}, _which
+              , _buffer
             );
         }
 

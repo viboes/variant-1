@@ -16,6 +16,7 @@
 #include <cassert>
 #include <cstddef>
 #include <exception>
+#include <memory>
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
@@ -85,64 +86,79 @@ namespace eggs { namespace variants { namespace detail
 #endif
 
     ///////////////////////////////////////////////////////////////////////////
+    template <typename Union>
     struct copy_construct
-      : visitor<copy_construct, void(void*, void const*)>
+      : visitor<copy_construct<Union>, void(Union&, Union const&)>
     {
-        template <typename T>
-        static void call(void* ptr, void const* other)
+        template <typename I>
+        static void call(Union& lhs, Union const& rhs)
         {
-            ::new (ptr) T(*static_cast<T const*>(other));
+            using T = typename std::decay<
+                decltype(lhs.template get<I::value>())
+            >::type;
+            ::new ((void*)&lhs.template get<I::value>()) T(rhs.template get<I::value>());
         }
     };
 
+    template <typename Union>
     struct move_construct
-      : visitor<move_construct, void(void*, void*)>
+      : visitor<move_construct<Union>, void(Union&, Union&)>
     {
-        template <typename T>
-        static void call(void* ptr, void* other)
+        template <typename I>
+        static void call(Union& lhs, Union& rhs)
         {
-            ::new (ptr) T(std::move(*static_cast<T*>(other)));
+            using T = typename std::decay<
+                decltype(lhs.template get<I::value>())
+            >::type;
+            ::new ((void*)&lhs.template get<I::value>()) T(std::move(rhs.template get<I::value>()));
         }
     };
 
+    template <typename Union>
     struct copy_assign
-      : visitor<copy_assign, void(void*, void const*)>
+      : visitor<copy_assign<Union>, void(Union&, Union const&)>
     {
-        template <typename T>
-        static void call(void* ptr, void const* other)
+        template <typename I>
+        static void call(Union& lhs, Union const& rhs)
         {
-            *static_cast<T*>(ptr) = *static_cast<T const*>(other);
+            lhs.template get<I::value>() = rhs.template get<I::value>();
         }
     };
 
+    template <typename Union>
     struct move_assign
-      : visitor<move_assign, void(void*, void*)>
+      : visitor<move_assign<Union>, void(Union&, Union&)>
     {
-        template <typename T>
-        static void call(void* ptr, void* other)
+        template <typename I>
+        static void call(Union& lhs, Union& rhs)
         {
-            *static_cast<T*>(ptr) = std::move(*static_cast<T*>(other));
+            lhs.template get<I::value>() = std::move(rhs.template get<I::value>());
         }
     };
 
+    template <typename Union>
     struct destroy
-      : visitor<destroy, void(void*)>
+      : visitor<destroy<Union>, void(Union&)>
     {
-        template <typename T>
-        static void call(void* ptr)
+        template <typename I>
+        static void call(Union& lhs)
         {
-            static_cast<T*>(ptr)->~T();
+            using T = typename std::decay<
+                decltype(lhs.template get<I::value>())
+            >::type;
+            lhs.template get<I::value>().~T();
         }
     };
 
+    template <typename Union>
     struct swap
-      : visitor<swap, void(void*, void*)>
+      : visitor<swap<Union>, void(Union&, Union&)>
     {
-        template <typename T>
-        static void call(void* ptr, void* other)
+        template <typename I>
+        static EGGS_CXX14_CONSTEXPR void call(Union& lhs, Union& rhs)
         {
             using std::swap;
-            swap(*static_cast<T*>(ptr), *static_cast<T*>(other));
+            swap(lhs.template get<I::value>(), rhs.template get<I::value>());
         }
     };
 
